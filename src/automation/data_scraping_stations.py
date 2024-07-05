@@ -9,11 +9,10 @@ auto_tools = AutomationTools()
 
 class DataScrapingStations:
             
-    @staticmethod
-    def start():
+    def start(self):
         auto_tools.init_chrome_driver()
         auto_tools.go_to_page()
-        xpaths_stations = DataScrapingStations.get_stations_xpaths()
+        xpaths_stations = self.get_stations_xpaths()
 
         general_data = []
         driver = auto_tools.get_driver()
@@ -32,7 +31,7 @@ class DataScrapingStations:
                 time.sleep(2)
                 continue
 
-            df_historical_data = DataScrapingStations.get_values_td_table()
+            df_historical_data = self.get_values_td_table()
 
             if isinstance(df_historical_data, dict) and 'Erro' in df_historical_data:
                 print('Sem dados históricos:', df_historical_data['Erro'])
@@ -55,8 +54,8 @@ class DataScrapingStations:
 
         return {'all_data': df_all_data, 'historical_data': df_historical_data}
     
-    @staticmethod
-    def get_stations_xpaths():
+
+    def get_stations_xpaths(self):
         driver = auto_tools.get_driver()
         tr_elements = driver.find_elements(By.XPATH, "/html/body/table/tbody/tr")
         data_stations = []
@@ -64,21 +63,16 @@ class DataScrapingStations:
             xpath = f"/html/body/table/tbody/tr[{index}]"
             if xpath != f"/html/body/table/tbody/tr[1]" and xpath != f"/html/body/table/tbody/tr[2]":
                 xpath_id = f"{xpath}/td[1]/a"
-                # xpath_name = f"{xpath}/td[2]/a"
                 xpath_id_element = driver.find_element(By.XPATH, xpath_id)
-                # xpath_name_element = driver.find_element(By.XPATH, xpath_name)
                 id_station = xpath_id_element.text
-                # name_station = xpath_name_element.text
                 data_stations.append({
                     'xpath': xpath+"/td[1]/a",
                     'id_station': id_station,
-                    # 'name_station': name_station
                 })
         return data_stations
     
 
-    @staticmethod
-    def get_values_td_table():
+    def get_values_td_table(self):
         driver = auto_tools.get_driver()
         # Primeiro, extraia o cabeçalho da tabela
         header_elements = driver.find_elements(By.XPATH, "/html/body/center/b/center/center/table/tbody/tr[1]/td")
@@ -111,31 +105,7 @@ class DataScrapingStations:
     
 
 
-    
-    @staticmethod
-    def get_value_columns_table():
-        driver = auto_tools.get_driver()
-        tr_elements = driver.find_elements(By.XPATH, "/html/body/center/b/center/center/table/tbody/tr[1]/td")
-        title_columns_stations = []
 
-        if not tr_elements:
-            raise ValueError("Nenhuma tag <td> encontrada após tbody/tr[1].")
-
-        for index, element in enumerate(tr_elements, start=1):
-            xpath = f"/html/body/center/b/center/center/table/tbody/tr[1]/td[{index}]"
-            try:
-                collumns = driver.find_element(By.XPATH, xpath).text
-            except selexcept.NoSuchElementException:
-                raise ValueError(f"Nenhuma tag <td> encontrada após {xpath}.")
-                
-            title_columns_stations.append({
-                'columns': collumns,
-            })
-
-        if not title_columns_stations:
-            raise ValueError("Nenhuma coluna encontrada com os seletores fornecidos.")
-
-        return title_columns_stations
     
     
     
