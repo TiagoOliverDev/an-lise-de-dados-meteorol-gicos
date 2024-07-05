@@ -1,13 +1,20 @@
 import time
 import pandas as pd
-from ..utils.selenium_automation_tools import AutomationTools
-from selenium.webdriver.common.by import By
 import selenium.common.exceptions as selexcept
 import selenium.common.exceptions as NoSuchElementException
+from ..utils.selenium_automation_tools import AutomationTools
+from selenium.webdriver.common.by import By
+from ..repositories.station_repository import StationRepository
+from ..repositories.historic_data_repository import HistoricDataRepository
+from ..db.database import SessionLocal
 
 auto_tools = AutomationTools()
 
 class DataScrapingStations:
+    def __init__(self):
+        self.db = SessionLocal()
+        self.station_repo = StationRepository(self.db)
+        self.historic_data_repo = HistoricDataRepository(self.db)
             
     def start(self):
         auto_tools.init_chrome_driver()
@@ -39,6 +46,25 @@ class DataScrapingStations:
                 time.sleep(2)
                 continue
 
+            station_record = self.station_repo.create_station(
+                name=name_station,
+                latitude=xpath_latitude,
+                longitude=xpath_longitude
+            )
+
+            for index, row in df_historical_data.iterrows():
+                for column in df_historical_data.columns:
+                    value_data = row[column]
+                    if value_data is not None: 
+                        historic_data_result = self.historic_data_repo.create_historic_data(
+                            name_data=column,
+                            value_data=value_data,
+                            station_id=station_record.id
+                        )
+                        if isinstance(historic_data_result, str):
+                            print(historic_data_result)  
+
+                
             general_data.append({
                 'ID externo da estacao': station['id_station'],
                 'Nome da estacao': name_station,
@@ -74,7 +100,7 @@ class DataScrapingStations:
 
     def get_values_td_table(self):
         driver = auto_tools.get_driver()
-        # Primeiro, extraia o cabeçalho da tabela
+
         header_elements = driver.find_elements(By.XPATH, "/html/body/center/b/center/center/table/tbody/tr[1]/td")
         
         if not header_elements:
@@ -82,7 +108,6 @@ class DataScrapingStations:
         
         headers = [header.text for header in header_elements]
 
-        # Agora, extraia os dados das linhas da tabela
         tr_elements_validator = driver.find_elements(By.XPATH, "/html/body/center/b/center/center/table/tbody/tr[position()>1]/td")
 
         if not tr_elements_validator:
