@@ -2,6 +2,8 @@ import time
 import pandas as pd
 from ..utils.selenium_automation_tools import AutomationTools
 from selenium.webdriver.common.by import By
+import selenium.common.exceptions as selexcept
+import selenium.common.exceptions as NoSuchElementException
 
 auto_tools = AutomationTools()
 
@@ -18,11 +20,16 @@ class DataScrapingStations:
 
         for station in data_stations:
             # print(xpath) 
-            # auto_tools.click_xpath(xpath_btn=station['xpath'])
+            # auto_tools.click_xpath(xpath_btn=station['xpath']) 
+            # auto_tools.click_xpath(xpath_btn='/html/body/table/tbody/tr[5]/td[1]/a')
             auto_tools.click_xpath(xpath_btn='/html/body/table/tbody/tr[17]/td[1]/a')
 
             xpath_latitude = driver.find_element(By.XPATH, '/html/body/center/b/table/tbody/tr[2]/td[5]').text
             xpath_longitude = driver.find_element(By.XPATH, '/html/body/center/b/table/tbody/tr[2]/td[6]').text
+
+            if not xpath_latitude or not xpath_longitude:
+                # ao não haver dados, apenas pula para a próxima estação
+                return {'Erro': 'Dados de latitude ou longitude estão vazios.'}
 
             df_historical_data = DataScrapingStations.get_values_td_table()
 
@@ -39,6 +46,7 @@ class DataScrapingStations:
 
         df_all_data = pd.DataFrame(general_data)
 
+        # return {'all_data': df_all_data}
         return {'all_data': df_all_data, 'historical_data': df_historical_data}
     
     @staticmethod
@@ -67,13 +75,24 @@ class DataScrapingStations:
         driver = auto_tools.get_driver()
         tr_elements = driver.find_elements(By.XPATH, "/html/body/center/b/center/center/table/tbody/tr[1]/td")
         title_columns_stations = []
+
+        if not tr_elements:
+            raise ValueError("Nenhuma tag <tr> encontrada após tbody/tr[1].")
+
         for index, element in enumerate(tr_elements, start=1):
             xpath = f"/html/body/center/b/center/center/table/tbody/tr[1]/td[{index}]"
-            collumns = driver.find_element(By.XPATH, xpath).text
-
+            try:
+                collumns = driver.find_element(By.XPATH, xpath).text
+            except selexcept.NoSuchElementException:
+                raise ValueError(f"Nenhuma tag <td> encontrada após {xpath}.")
+                
             title_columns_stations.append({
                 'columns': collumns,
             })
+
+        if not title_columns_stations:
+            raise ValueError("Nenhuma coluna encontrada com os seletores fornecidos.")
+
         return title_columns_stations
     
     @staticmethod
