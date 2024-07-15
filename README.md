@@ -1,7 +1,7 @@
 weather_api/
 │
 ├── data/                    # Armazenamento de dados locais, se necessário
-├── notebooks/               # Notebooks Jupyter para exploração e análise
+├── notebooks/               # Notebooks Jupyter para exploração e análise (ainda ver isso)
 ├── src/
 │   ├── __init__.py
 │   ├── api/                 # Endpoints da API
@@ -32,3 +32,7 @@ weather_api/
 ├── requirements.txt         # Dependências do projeto
 ├── README.md
 └── main.py                  # Arquivo principal que inicia a aplicação
+
+
+
+teste
