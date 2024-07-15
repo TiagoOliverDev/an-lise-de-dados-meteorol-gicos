@@ -1,4 +1,4 @@
-from src.automation import DataScrapingStations
+from app.src.automation import DataScrapingStations
 
 class Main:
     def __init__(self) -> None:

@@ -1,6 +1,22 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from ..db.database import Base
+from werkzeug.security import check_password_hash
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    password = Column(String)
+
+    def __repr__(self):
+        return f"<User(id={self.id}, email={self.email})>"
+    
+    def check_password(self, password: str) -> bool:
+        """Verify the provided password against the stored hash."""
+        return check_password_hash(self.password, password)
 
 class Station(Base):
     __tablename__ = "stations"

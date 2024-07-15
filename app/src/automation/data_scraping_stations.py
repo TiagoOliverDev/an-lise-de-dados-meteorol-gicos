@@ -8,33 +8,34 @@ from ..repositories.station_repository import StationRepository
 from ..repositories.historic_data_repository import HistoricDataRepository
 from ..db.database import SessionLocal
 
-auto_tools = AutomationTools()
+
 
 class DataScrapingStations:
     def __init__(self):
+        self.auto_tools = AutomationTools()
         self.db = SessionLocal()
         self.station_repo = StationRepository(self.db)
         self.historic_data_repo = HistoricDataRepository(self.db)
             
     def start(self):
-        auto_tools.init_chrome_driver()
-        auto_tools.go_to_page()
+        self.auto_tools.init_chrome_driver()
+        self.auto_tools.go_to_page()
         xpaths_stations = self.get_stations_xpaths()
 
         general_data = []
-        driver = auto_tools.get_driver()
+        driver = self.auto_tools.get_driver()
 
         for station in xpaths_stations:
-            auto_tools.click_xpath(xpath_btn=station['xpath']) 
-            # auto_tools.click_xpath(xpath_btn='/html/body/table/tbody/tr[5]/td[1]/a')
-            # auto_tools.click_xpath(xpath_btn='/html/body/table/tbody/tr[17]/td[1]/a')
+            self.auto_tools.click_xpath(xpath_btn=station['xpath']) 
+            # self.auto_tools.click_xpath(xpath_btn='/html/body/table/tbody/tr[5]/td[1]/a')
+            # self.auto_tools.click_xpath(xpath_btn='/html/body/table/tbody/tr[17]/td[1]/a')
 
             name_station = driver.find_element(By.XPATH, '/html/body/center/b/table/tbody/tr[2]/td[2]').text
             xpath_latitude = driver.find_element(By.XPATH, '/html/body/center/b/table/tbody/tr[2]/td[5]').text
             xpath_longitude = driver.find_element(By.XPATH, '/html/body/center/b/table/tbody/tr[2]/td[6]').text
 
             if not name_station or not xpath_latitude or not xpath_longitude:
-                auto_tools.go_to_page()
+                self.auto_tools.go_to_page()
                 time.sleep(2)
                 continue
 
@@ -42,7 +43,7 @@ class DataScrapingStations:
 
             if isinstance(df_historical_data, dict) and 'Erro' in df_historical_data:
                 print('Sem dados históricos:', df_historical_data['Erro'])
-                auto_tools.go_to_page()
+                self.auto_tools.go_to_page()
                 time.sleep(2)
                 continue
 
@@ -72,7 +73,7 @@ class DataScrapingStations:
                 'Longitude': xpath_longitude,
             })
 
-            auto_tools.go_to_page()
+            self.auto_tools.go_to_page()
             time.sleep(2)
             # break
 
@@ -82,7 +83,7 @@ class DataScrapingStations:
     
 
     def get_stations_xpaths(self):
-        driver = auto_tools.get_driver()
+        driver = self.auto_tools.get_driver()
         tr_elements = driver.find_elements(By.XPATH, "/html/body/table/tbody/tr")
         data_stations = []
         for index, element in enumerate(tr_elements, start=1):
@@ -99,7 +100,7 @@ class DataScrapingStations:
     
 
     def get_values_td_table(self):
-        driver = auto_tools.get_driver()
+        driver = self.auto_tools.get_driver()
 
         header_elements = driver.find_elements(By.XPATH, "/html/body/center/b/center/center/table/tbody/tr[1]/td")
         
@@ -120,7 +121,7 @@ class DataScrapingStations:
             td_elements = tr_element.find_elements(By.TAG_NAME, "td")
             row_data = [td_element.text for td_element in td_elements]
             data_rows.append(row_data)
-
+        
         if not data_rows:
             return {'Erro': 'Nenhum dado encontrado nas linhas da tabela.'}
 
